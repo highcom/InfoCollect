@@ -1,5 +1,6 @@
 import sys
 import os
+from lxml import html
 from glob import glob
 from collections import Counter
 
@@ -25,7 +26,7 @@ def main():
         print('Processing {0}...'.format(path), file=sys.stderr)
 
         with open(path) as file:  # ファイルを開く。
-            for content in iter_docs(file):  # ファイル内の全記事について反復処理する。
+            for content in iter_docs(tagger, file):  # ファイル内の全記事について反復処理する。
                 tokens = get_tokens(tagger, content)  # ページから名詞のリストを取得する。
                 # Counterのupdate()メソッドにリストなどの反復可能オブジェクトを指定すると、
                 # リストに含まれる値の出現回数を一度に増やせる。
@@ -42,7 +43,7 @@ def main():
         print(token, count)
 
 
-def iter_docs(file):
+def iter_docs(tagger, file):
     """
     ファイルオブジェクトを読み込んで、記事の中身（開始タグ <doc ...> と終了タグ </doc> の間のテキスト）を
     順に返すジェネレーター関数。
@@ -51,6 +52,8 @@ def iter_docs(file):
     for line in file:
         if line.startswith('<doc '):
             buffer = []  # 開始タグが見つかったらバッファを初期化する。
+            if not judge_person_name(tagger, line):
+                continue
         elif line.startswith('</doc>'):
             # 終了タグが見つかったらバッファの中身を結合してyieldする。
             content = ''.join(buffer)
@@ -58,6 +61,18 @@ def iter_docs(file):
         else:
             buffer.append(line)  # 開始タグ・終了タグ以外の行はバッファに追加する。
 
+def judge_person_name(tagger, line):
+    tokens = html.fromstring(line)
+    token = tokens.attrib['title']
+
+    node = tagger.parseToNode(token)
+    while node:
+        category1, category2, category3 = node.feature.split(',')[:3]
+        if category1 == '名詞' and category2 == '固有名詞' and category3 == '人名':
+            print(token)
+            return True
+        node = node.next
+    return False
 
 def get_tokens(tagger, content):
     """
