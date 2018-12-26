@@ -1,5 +1,6 @@
 import sys
 import os
+from lxml import html
 from glob import glob
 from collections import Counter
 
@@ -25,11 +26,16 @@ def main():
         print('Processing {0}...'.format(path), file=sys.stderr)
 
         with open(path) as file:  # ファイルを開く。
-            for content in iter_docs(file):  # ファイル内の全記事について反復処理する。
-                tokens = get_tokens(tagger, content)  # ページから名詞のリストを取得する。
-                # Counterのupdate()メソッドにリストなどの反復可能オブジェクトを指定すると、
-                # リストに含まれる値の出現回数を一度に増やせる。
-                frequency.update(tokens)
+            for title, content in iter_docs(file):  # ファイル内の全記事について反復処理する。
+                if judge_person_name(tagger, title):
+                    tokens = get_tokens(tagger, content)  # ページから名詞のリストを取得する。
+                    # Counterのupdate()メソッドにリストなどの反復可能オブジェクトを指定すると、
+                    # リストに含まれる値の出現回数を一度に増やせる。
+                    frequency = Counter()
+                    frequency.update(tokens)
+                    for token, count in frequency.most_common(5):
+                        print(token, count)
+                    print('\n')
 
                 # 10,000件ごとに進捗を表示。
                 count_proccessed += 1
@@ -38,8 +44,8 @@ def main():
                           file=sys.stderr)
 
     # 全記事の処理が完了したら、上位30件の名詞と出現回数を表示する。
-    for token, count in frequency.most_common(30):
-        print(token, count)
+    #for token, count in frequency.most_common(30):
+        #print(token, count)
 
 
 def iter_docs(file):
@@ -51,13 +57,28 @@ def iter_docs(file):
     for line in file:
         if line.startswith('<doc '):
             buffer = []  # 開始タグが見つかったらバッファを初期化する。
+            title = get_title_from_html(line)
         elif line.startswith('</doc>'):
             # 終了タグが見つかったらバッファの中身を結合してyieldする。
             content = ''.join(buffer)
-            yield content
+            yield title, content
         else:
             buffer.append(line)  # 開始タグ・終了タグ以外の行はバッファに追加する。
 
+def get_title_from_html(line):
+    tokens = html.fromstring(line)
+    token = tokens.attrib['title']
+    return token
+
+def judge_person_name(tagger, name):
+    node = tagger.parseToNode(name)
+    while node:
+        category1, category2, category3 = node.feature.split(',')[:3]
+        if category1 == '名詞' and category2 == '固有名詞' and category3 == '人名':
+            print("------------", name, "------------")
+            return True
+        node = node.next
+    return False
 
 def get_tokens(tagger, content):
     """
