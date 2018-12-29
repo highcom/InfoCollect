@@ -1,5 +1,6 @@
 import sys
 from KnowledgeCreator import KnowledgeCreator
+from KnowledgeBaseFile import KnowledgeBaseFile
 
 import MeCab
 
@@ -14,6 +15,8 @@ def main():
     knowledge = KnowledgeCreator(input_dir)
     personsDict = knowledge.Create()
     knowledge.PrintDict(personsDict)
+    basefile = KnowledgeBaseFile(personsDict)
+    basefile.CreateBaseFile()
 
 if __name__ == '__main__':
     main()
