@@ -1,9 +1,5 @@
 import sys
-import os
-from lxml import html
-from glob import glob
-from collections import Counter
-from CreateKnowledge import CreateKnowledge
+from KnowledgeCreator import KnowledgeCreator
 
 import MeCab
 
@@ -15,8 +11,9 @@ def main():
 
     input_dir = sys.argv[1]  # コマンドラインの第1引数で、WikiExtractorの出力先のディレクトリを指定する。
 
-    knowledge = CreateKnowledge(input_dir)
-    knowledge.Create()
+    knowledge = KnowledgeCreator(input_dir)
+    personsDict = knowledge.Create()
+    knowledge.PrintDict(personsDict)
 
 if __name__ == '__main__':
     main()

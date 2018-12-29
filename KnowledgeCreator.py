@@ -6,17 +6,15 @@ from collections import Counter
 
 import MeCab
 
-class CreateKnowledge():
+class KnowledgeCreator():
     def __init__(self, input_dir):
         self.input_dir = input_dir
 
     def Create(self):
         tagger = MeCab.Tagger('')
         tagger.parse('')  # parseToNode() の不具合を回避するために必要。
-        # 単語の頻度を格納するCounterオブジェクトを作成する。
-        # Counterクラスはdictを継承しており、値としてキーの出現回数を保持する。
-        frequency = Counter()
-        count_proccessed = 0
+        personsDict = {}
+        status_count = 0
 
         # glob()でワイルドカードにマッチするファイルのリストを取得し、マッチしたすべてのファイルを処理する。
         for path in glob(os.path.join(self.input_dir, '*', 'wiki_*')):
@@ -26,24 +24,27 @@ class CreateKnowledge():
                 for title, content in self.IterDocs(file):  # ファイル内の全記事について反復処理する。
                     if self.JudgePersonName(tagger, title):
                         tokens = self.GetTokens(tagger, content)  # ページから名詞のリストを取得する。
+
+                        # 単語の頻度を格納するCounterオブジェクトを作成する。
+                        # Counterクラスはdictを継承しており、値としてキーの出現回数を保持する。
                         # Counterのupdate()メソッドにリストなどの反復可能オブジェクトを指定すると、
                         # リストに含まれる値の出現回数を一度に増やせる。
                         frequency = Counter()
                         frequency.update(tokens)
-                        for token, count in frequency.most_common(5):
-                            print(token, count, end=" ")
-                        print('\n')
+                        personsDict[title] = frequency.most_common(5)
 
-                    # 10,000件ごとに進捗を表示。
-                    count_proccessed += 1
-                    if count_proccessed % 10000 == 0:
-                        print('{0} documents were processed.'.format(count_proccessed),
-                            file=sys.stderr)
-
-        # 全記事の処理が完了したら、上位30件の名詞と出現回数を表示する。
-        #for token, count in frequency.most_common(30):
-            #print(token, count)
-
+                        status_count += 1
+                        if status_count % 100 == 0:
+                            print(status_count, end=" ")
+        
+        return personsDict
+        
+    def PrintDict(self, personsDict):
+        for key, value in personsDict.items():
+            print("-----", key, "-----")
+            for param, count in value:
+                print(param, end=" ")
+            print('\n')
 
     def IterDocs(self, file):
         """
@@ -63,16 +64,21 @@ class CreateKnowledge():
                 buffer.append(line)  # 開始タグ・終了タグ以外の行はバッファに追加する。
 
     def GetTitleFromHtml(self, line):
+        """
+        HTMLタグからtitleに格納されているパラメータを取得する
+        """
         tokens = html.fromstring(line)
         token = tokens.attrib['title']
         return token
 
     def JudgePersonName(self, tagger, name):
+        """
+        パースした結果、単語が人名かどうか判定する
+        """
         node = tagger.parseToNode(name)
         while node:
             category1, category2, category3 = node.feature.split(',')[:3]
             if category1 == '名詞' and category2 == '固有名詞' and category3 == '人名':
-                print("------------", name, "------------")
                 return True
             node = node.next
         return False
