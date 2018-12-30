@@ -12,8 +12,10 @@ def main():
 
     input_dir = sys.argv[1]  # コマンドラインの第1引数で、WikiExtractorの出力先のディレクトリを指定する。
 
+    #Wikipediaの情報からナレッジベースの作成
     knowledge = KnowledgeCreator(input_dir)
     personsDict = knowledge.Create()
+    #QnA Makerに食わせる用のtsvファイルを作成
     knowledge.PrintDict(personsDict)
     basefile = KnowledgeBaseFile(personsDict)
     basefile.CreateBaseFile()

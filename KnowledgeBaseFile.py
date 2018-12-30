@@ -9,9 +9,9 @@ class KnowledgeBaseFile():
         f.close()
     
     def CreateHeader(self, f):
-        f.writelines('Question	Answer	Source	Metadata\n')
+        f.write('Question	Answer	Source	Metadata\n')
 
     def CreateValue(self, f):
         for key, value in self.personsDict.items():
            for param, count in value:
-               f.writelines('' + param + '	' + key + '	' + 'Editional\n') 
+               f.write('' + param + '	' + key + 'ですね' + '	' + 'Editional' + '	\n') 

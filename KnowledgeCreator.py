@@ -99,7 +99,8 @@ class KnowledgeCreator():
             if category == '名詞' and sub_category in ('固有名詞', '一般'):
                 #macの環境だとsurfaceで取れる値が単語ではなく文字列になるので修正
                 #tokens.append(node.surface)
-                tokens.append(node.feature.split(',')[6])
+                if not node.feature.split(',')[6] == '*':
+                    tokens.append(node.feature.split(',')[6])
             node = node.next
 
         return tokens
