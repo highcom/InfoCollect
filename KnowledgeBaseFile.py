@@ -3,7 +3,7 @@ class KnowledgeBaseFile():
         self.personsDict = personsDict
     
     def CreateBaseFile(self):
-        f = open('knowledge_data.tsv', 'w')
+        f = open('knowledge_data.tsv', 'w', encoding="utf-8")
         self.CreateHeader(f)
         self.CreateValue(f)
         f.close()

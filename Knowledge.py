@@ -16,7 +16,7 @@ def main():
     knowledge = KnowledgeCreator(input_dir)
     personsDict = knowledge.Create()
     #QnA Makerに食わせる用のtsvファイルを作成
-    knowledge.PrintDict(personsDict)
+    #knowledge.PrintDict(personsDict)
     basefile = KnowledgeBaseFile(personsDict)
     basefile.CreateBaseFile()
 
