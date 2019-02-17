@@ -1,9 +1,11 @@
+from config import config
+
 class KnowledgeBaseFile():
-    def __init__(self, personsDict):
+    def __init__(self, personsDict=None):
         self.personsDict = personsDict
     
-    def CreateBaseFile(self):
-        f = open('knowledge_data.tsv', 'w', encoding="utf-8")
+    def CreateBaseFile(self, fname):
+        f = open(fname, 'w', encoding="utf-8")
         self.CreateHeader(f)
         self.CreateValue(f)
         f.close()
@@ -16,24 +18,27 @@ class KnowledgeBaseFile():
            for param, count in value:
                f.write('' + param + '	' + key + 'ですね' + '	' + 'Editional' + '	\n') 
 
-    def SplitBaseFile(self):
-        f = open('knowledge_data.tsv', 'r', encoding="utf-8")
+    def SplitBaseFile(self, fname):
+        f = open(fname, 'r', encoding="utf-8")
         lines = f.readlines()
+        f.close()
 
         fcount = 0
-        linenum = 0
-        sf = open('knowledgefile/knowledge_data_00.tsv', 'w', encoding="utf-8")
+        sf = open(self.GetSplitFileName(fcount), 'w', encoding="utf-8")
 
+        linenum = 0
         for line in lines:
             linenum += 1
             #QnAMakerRegisterに食わせる時にファイルサイズを約1.5MB程度に抑える必要がある
             if not linenum % 30000:
                 sf.close()
                 fcount += 1
-                sfname = 'knowledgefile/knowledge_data_' + str(fcount).zfill(2) + '.tsv'
-                sf = open(sfname, 'w', encoding="utf-8")
+                sf = open(self.GetSplitFileName(fcount), 'w', encoding="utf-8")
                 self.CreateHeader(sf)
 
             sf.write(line)
 
         sf.close()
+
+    def GetSplitFileName(self, count):
+        return config['dirname'] + '/' + config['basename'] + '_' + str(count).zfill(2) + config['format']
