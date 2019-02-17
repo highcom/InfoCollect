@@ -19,6 +19,7 @@ def main():
     #knowledge.PrintDict(personsDict)
     basefile = KnowledgeBaseFile(personsDict)
     basefile.CreateBaseFile()
+    basefile.SplitBaseFile()
 
 if __name__ == '__main__':
     main()
